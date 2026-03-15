@@ -59,7 +59,7 @@ body {
     font-family: var(--font);
     color: var(--text-primary);
     background-color: #0A1628;
-    background-image: linear-gradient(rgba(146, 149, 154, 0.5), rgba(54, 61, 71, 0.5)), url('college photo.PNG');
+    background-image: linear-gradient(rgba(10, 22, 40, 0.8), rgba(10, 22, 40, 0.85)), url('college photo.PNG');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -105,6 +105,16 @@ ul {
 .section__header {
     text-align: center;
     margin-bottom: 60px;
+    background: rgba(10, 22, 40, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 32px 24px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: var(--shadow-md);
 }
 
 .section__tag {
@@ -132,6 +142,7 @@ ul {
     font-size: 1.1rem;
     max-width: 600px;
     margin: 0 auto;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 .gradient-text {
@@ -340,7 +351,7 @@ ul {
     position: absolute;
     inset: 0;
     background: url('../assets/images/hero-bg.png') center/cover no-repeat;
-    opacity: 0.15;
+    opacity: 0.4;
     mix-blend-mode: luminosity;
 }
 
@@ -429,12 +440,13 @@ ul {
 }
 
 .college {
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(255, 255, 255, 0.95);
     font-size: 0.85rem;
-    font-weight: 400;
+    font-weight: 500;
     line-height: 1.5;
     margin: 0;
     text-align: center;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 .hero__badge {
@@ -457,6 +469,7 @@ ul {
     line-height: 1.1;
     margin-bottom: 20px;
     letter-spacing: -1px;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
 .hero__title .gradient-text {
@@ -481,10 +494,11 @@ ul {
 }
 
 .hero__subtitle {
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.85);
     font-size: clamp(1rem, 2vw, 1.3rem);
-    font-weight: 400;
+    font-weight: 500;
     margin-bottom: 40px;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
 }
 
 .hero__buttons {
@@ -861,9 +875,21 @@ ul {
     text-align: center;
     font-size: 1.3rem;
     font-weight: 700;
-    color: var(--ieee-blue);
+    color: var(--text-primary);
     margin-bottom: 32px;
     letter-spacing: 0.5px;
+    background: rgba(10, 22, 40, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 16px 32px;
+    border-radius: var(--radius-full);
+    display: inline-block;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+}
+
+.team__subpanel {
+    text-align: center;
 }
 
 /* ========================================

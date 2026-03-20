@@ -1609,23 +1609,33 @@ ul {
 
     /* Hero */
     .hero__college-container {
+        flex-wrap: nowrap;
+        justify-content: space-between;
         align-items: flex-start;
-        gap: 12px;
+        gap: 8px;
     }
     
     .hero__college-logo {
         height: 60px;
         margin-top: 4px;
+        order: 1;
     }
     
     .hero__college-logo-right {
         height: 60px;
         margin-left: 0;
         margin-top: 4px;
+        order: 3;
+    }
+    
+    .hero__college-text {
+        order: 2;
+        flex: 1;
+        text-align: center;
     }
     
     .hero__college-highlight {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
     }
     
     .hero__buttons {
@@ -1727,7 +1737,7 @@ ul {
     }
     
     .hero__college-container {
-        gap: 8px;
+        gap: 6px;
     }
     
     .hero__college-logo, .hero__college-logo-right {

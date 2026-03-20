@@ -1614,30 +1614,30 @@ ul {
         align-items: flex-start;
         gap: 8px;
     }
-    
+
     .hero__college-logo {
         height: 60px;
         margin-top: 4px;
         order: 1;
     }
-    
+
     .hero__college-logo-right {
         height: 60px;
         margin-left: 0;
         margin-top: 4px;
         order: 3;
     }
-    
+
     .hero__college-text {
         order: 2;
         flex: 1;
         text-align: center;
     }
-    
+
     .hero__college-highlight {
         font-size: 1.1rem;
     }
-    
+
     .hero__buttons {
         margin-bottom: 40px;
     }
@@ -1735,15 +1735,16 @@ ul {
     .hero__title {
         font-size: 2rem;
     }
-    
+
     .hero__college-container {
         gap: 6px;
     }
-    
-    .hero__college-logo, .hero__college-logo-right {
+
+    .hero__college-logo,
+    .hero__college-logo-right {
         height: 50px;
     }
-    
+
     .hero__college-highlight {
         font-size: 1rem;
     }

@@ -1023,6 +1023,9 @@ ul {
     box-shadow: var(--shadow-card);
     overflow: hidden;
     transition: all var(--transition);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .event-card.hidden {
@@ -1071,6 +1074,10 @@ ul {
 
 .event-card__body {
     padding: 24px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    align-items: flex-start;
 }
 
 .event-card__date {
@@ -1094,6 +1101,13 @@ ul {
     font-size: 0.9rem;
     margin-bottom: 20px;
     line-height: 1.6;
+    flex-grow: 1;
+}
+
+.event-card__actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 /* ========================================

@@ -206,6 +206,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // All event cards visible by default on page load
+
     /* ========================================
        TEAM TAB SWITCHING
        ======================================== */
@@ -271,22 +273,20 @@ document.addEventListener('DOMContentLoaded', () => {
        GALLERY LIGHTBOX
        ======================================== */
     let currentImageIndex = 0;
-    const galleryImages = [];
 
-    galleryItems.forEach((item, index) => {
+    function getGalleryItems() {
+        // Always read from DOM so uploaded images are included; exclude upload tile
+        return Array.from(document.querySelectorAll('.gallery__item:not(.gallery__upload-tile)'));
+    }
+
+    function openLightboxAt(index) {
+        const items = getGalleryItems();
+        if (!items.length) return;
+        currentImageIndex = (index + items.length) % items.length;
+        const item = items[currentImageIndex];
         const img = item.querySelector('img');
         const caption = item.getAttribute('data-caption') || '';
-        galleryImages.push({ src: img.src, caption });
-
-        item.addEventListener('click', () => {
-            currentImageIndex = index;
-            openLightbox();
-        });
-    });
-
-    function openLightbox() {
-        const { src, caption } = galleryImages[currentImageIndex];
-        lightboxImg.src = src;
+        lightboxImg.src = img ? img.src : '';
         lightboxCaption.textContent = caption;
         lightbox.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -294,18 +294,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function closeLightbox() {
         lightbox.classList.remove('active');
+        lightboxImg.src = '';
         document.body.style.overflow = '';
     }
 
     function prevImage() {
-        currentImageIndex = (currentImageIndex - 1 + galleryImages.length) % galleryImages.length;
-        openLightbox();
+        openLightboxAt(currentImageIndex - 1);
     }
 
     function nextImage() {
-        currentImageIndex = (currentImageIndex + 1) % galleryImages.length;
-        openLightbox();
+        openLightboxAt(currentImageIndex + 1);
     }
+
+    // Wire existing gallery items
+    galleryItems.forEach((item, index) => {
+        if (item.classList.contains('gallery__upload-tile')) return;
+        item.addEventListener('click', () => {
+            // Recalculate index from DOM at click time
+            const items = getGalleryItems();
+            const idx = items.indexOf(item);
+            openLightboxAt(idx >= 0 ? idx : index);
+        });
+    });
 
     lightboxClose.addEventListener('click', closeLightbox);
     lightboxPrev.addEventListener('click', prevImage);
@@ -322,6 +332,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Close on backdrop click
     lightbox.addEventListener('click', (e) => {
         if (e.target === lightbox) closeLightbox();
+    });
+
+    // Listen for gallery:open events dispatched by dynamically added (uploaded) images
+    document.addEventListener('gallery:open', (e) => {
+        openLightboxAt(e.detail.index);
     });
 
     /* ========================================
@@ -356,3 +371,79 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+/* ========================================
+   GALLERY UPLOAD TILE
+   ======================================== */
+(function () {
+    const uploadTile = document.getElementById('gallery-upload-tile');
+    const uploadInput = document.getElementById('gallery-upload-input');
+    const galleryGrid = uploadTile ? uploadTile.closest('.gallery__grid') : null;
+
+    if (!uploadTile || !uploadInput || !galleryGrid) return;
+
+    // Click on tile triggers file picker
+    uploadTile.addEventListener('click', () => uploadInput.click());
+
+    // Handle drag-and-drop on the tile
+    uploadTile.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadTile.style.borderColor = 'var(--ieee-blue)';
+        uploadTile.style.background = 'rgba(0,98,155,0.1)';
+    });
+
+    uploadTile.addEventListener('dragleave', () => {
+        uploadTile.style.borderColor = '';
+        uploadTile.style.background = '';
+    });
+
+    uploadTile.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadTile.style.borderColor = '';
+        uploadTile.style.background = '';
+        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+        files.forEach(addImageToGallery);
+    });
+
+    // Handle selected files via file picker
+    uploadInput.addEventListener('change', () => {
+        const files = Array.from(uploadInput.files);
+        files.forEach(addImageToGallery);
+        uploadInput.value = '';
+    });
+
+    function addImageToGallery(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const src = e.target.result;
+            const caption = file.name.replace(/\.[^.]+$/, '');
+
+            const item = document.createElement('div');
+            item.className = 'gallery__item';
+            item.setAttribute('data-caption', caption);
+            item.style.animation = 'fadeInUp 0.5s ease';
+
+            item.innerHTML = `
+                <img src="${src}" alt="${caption}" loading="lazy" />
+                <div class="gallery__overlay">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        <line x1="11" y1="8" x2="11" y2="14" />
+                        <line x1="8" y1="11" x2="14" y2="11" />
+                    </svg>
+                </div>`;
+
+            // Insert before the upload tile
+            galleryGrid.insertBefore(item, uploadTile);
+
+            // Wire the new item into the shared lightbox using DOM index
+            item.addEventListener('click', () => {
+                const allItems = Array.from(document.querySelectorAll('.gallery__item:not(.gallery__upload-tile)'));
+                const idx = allItems.indexOf(item);
+                // openLightboxAt is defined in the main DOMContentLoaded scope; trigger via custom event
+                document.dispatchEvent(new CustomEvent('gallery:open', { detail: { index: idx } }));
+            });
+        };
+        reader.readAsDataURL(file);
+    }
+})();

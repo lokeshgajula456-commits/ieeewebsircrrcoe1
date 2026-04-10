@@ -436,6 +436,9 @@ document.head.appendChild(style);
             // Insert before the upload tile
             galleryGrid.insertBefore(item, uploadTile);
 
+            // Save to localStorage
+            saveImageToStorage(src, caption);
+
             // Wire the new item into the shared lightbox using DOM index
             item.addEventListener('click', () => {
                 const allItems = Array.from(document.querySelectorAll('.gallery__item:not(.gallery__upload-tile)'));
@@ -446,4 +449,45 @@ document.head.appendChild(style);
         };
         reader.readAsDataURL(file);
     }
+
+    // Function to save image to localStorage
+    function saveImageToStorage(src, caption) {
+        const storedImages = JSON.parse(localStorage.getItem('galleryImages') || '[]');
+        storedImages.push({ src, caption });
+        localStorage.setItem('galleryImages', JSON.stringify(storedImages));
+    }
+
+    // Function to load images from localStorage
+    function loadImagesFromStorage() {
+        const storedImages = JSON.parse(localStorage.getItem('galleryImages') || '[]');
+        storedImages.forEach(({ src, caption }) => {
+            const item = document.createElement('div');
+            item.className = 'gallery__item';
+            item.setAttribute('data-caption', caption);
+
+            item.innerHTML = `
+                <img src="${src}" alt="${caption}" loading="lazy" />
+                <div class="gallery__overlay">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        <line x1="11" y1="8" x2="11" y2="14" />
+                        <line x1="8" y1="11" x2="14" y2="11" />
+                    </svg>
+                </div>`;
+
+            // Insert before the upload tile
+            galleryGrid.insertBefore(item, uploadTile);
+
+            // Wire the new item into the shared lightbox using DOM index
+            item.addEventListener('click', () => {
+                const allItems = Array.from(document.querySelectorAll('.gallery__item:not(.gallery__upload-tile)'));
+                const idx = allItems.indexOf(item);
+                document.dispatchEvent(new CustomEvent('gallery:open', { detail: { index: idx } }));
+            });
+        });
+    }
+
+    // Load saved images on page load
+    loadImagesFromStorage();
 })();

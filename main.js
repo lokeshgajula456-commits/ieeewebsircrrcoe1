@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => {
                     entry.target.classList.add('visible');
                 }, revealDelay);
-                
+
                 revealDelay += 100;
                 clearTimeout(revealTimeout);
                 revealTimeout = setTimeout(() => { revealDelay = 0; }, 100);
@@ -381,8 +381,62 @@ document.head.appendChild(style);
 
     if (!uploadTile || !uploadInput || !galleryGrid) return;
 
-    // Click on tile triggers file picker
-    uploadTile.addEventListener('click', () => uploadInput.click());
+    // Authorized emails for gallery upload
+    const AUTHORIZED_EMAILS = [
+        'ieeecrr@gmail.com',
+    ]; // You can add more emails here by editing this list
+
+    const authModal = document.getElementById('auth-modal');
+    const authInput = document.getElementById('auth-email-input');
+    const authConfirm = document.getElementById('auth-confirm-btn');
+    const authCancel = document.getElementById('auth-cancel-btn');
+    const authErrorMsg = document.getElementById('auth-error-msg');
+
+    let authSuccessCallback = null;
+
+    function resetModal() {
+        if (authModal) authModal.style.display = 'none';
+        if (authInput) authInput.value = '';
+        if (authErrorMsg) authErrorMsg.style.display = 'none';
+        authSuccessCallback = null;
+        document.body.style.overflow = '';
+    }
+
+    function showAuthModal(onSuccess) {
+        if (!authModal) return;
+        authSuccessCallback = onSuccess;
+        authModal.style.display = 'flex';
+        authInput.focus();
+        document.body.style.overflow = 'hidden';
+    }
+
+    if (authCancel) authCancel.addEventListener('click', resetModal);
+
+    if (authConfirm) authConfirm.addEventListener('click', () => {
+        const email = authInput.value.trim().toLowerCase();
+        if (AUTHORIZED_EMAILS.includes(email)) {
+            authErrorMsg.style.display = 'none';
+            if (authSuccessCallback) {
+                authSuccessCallback();
+            }
+            // Add a small delay before resetting
+            setTimeout(resetModal, 100);
+        } else {
+            authErrorMsg.style.display = 'block';
+        }
+    });
+
+    if (authInput) authInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') authConfirm.click();
+    });
+
+    // Click on tile triggers modal
+    uploadTile.addEventListener('click', (e) => {
+        if (e.target === uploadInput) return;
+        showAuthModal(() => {
+            uploadInput.click();
+        });
+    });
 
     // Handle drag-and-drop on the tile
     uploadTile.addEventListener('dragover', (e) => {
@@ -400,8 +454,13 @@ document.head.appendChild(style);
         e.preventDefault();
         uploadTile.style.borderColor = '';
         uploadTile.style.background = '';
+
         const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-        files.forEach(addImageToGallery);
+        if (files.length > 0) {
+            showAuthModal(() => {
+                files.forEach(addImageToGallery);
+            });
+        }
     });
 
     // Handle selected files via file picker
@@ -410,6 +469,72 @@ document.head.appendChild(style);
         files.forEach(addImageToGallery);
         uploadInput.value = '';
     });
+
+    // Add CSS dynamically for the delete button
+    if (!document.getElementById('gallery-delete-styles')) {
+        const styleDel = document.createElement('style');
+        styleDel.id = 'gallery-delete-styles';
+        styleDel.textContent = `
+            .gallery__delete-btn {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                background: rgba(255, 0, 0, 0.7);
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 4px 6px;
+                cursor: pointer;
+                opacity: 0;
+                transition: opacity 0.3s ease, background 0.3s ease;
+                z-index: 10;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .gallery__item:hover .gallery__delete-btn {
+                opacity: 1;
+            }
+            .gallery__delete-btn:hover {
+                background: rgba(255, 0, 0, 1);
+            }
+        `;
+        document.head.appendChild(styleDel);
+    }
+
+    function bindDeleteButton(item, src) {
+        const delBtn = document.createElement('button');
+        delBtn.className = 'gallery__delete-btn';
+        delBtn.title = 'Delete image';
+        delBtn.innerHTML = `
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+        `;
+        item.appendChild(delBtn);
+
+        delBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent opening the lightbox
+            showAuthModal(() => {
+                if(window.confirm('Are you sure you want to delete this image?')) {
+                    // Remove from localStorage array
+                    let storedImages = JSON.parse(localStorage.getItem('galleryImages') || '[]');
+                    storedImages = storedImages.filter(img => img.src !== src);
+                    localStorage.setItem('galleryImages', JSON.stringify(storedImages));
+
+                    // Hide hardcoded images
+                    let deletedImages = JSON.parse(localStorage.getItem('deletedGalleryImages') || '[]');
+                    if (!deletedImages.includes(src)) {
+                        deletedImages.push(src);
+                        localStorage.setItem('deletedGalleryImages', JSON.stringify(deletedImages));
+                    }
+
+                    item.remove();
+                }
+            });
+        });
+    }
 
     function addImageToGallery(file) {
         const reader = new FileReader();
@@ -446,6 +571,8 @@ document.head.appendChild(style);
                 // openLightboxAt is defined in the main DOMContentLoaded scope; trigger via custom event
                 document.dispatchEvent(new CustomEvent('gallery:open', { detail: { index: idx } }));
             });
+
+            bindDeleteButton(item, src);
         };
         reader.readAsDataURL(file);
     }
@@ -476,18 +603,39 @@ document.head.appendChild(style);
                     </svg>
                 </div>`;
 
-            // Insert before the upload tile
             galleryGrid.insertBefore(item, uploadTile);
 
-            // Wire the new item into the shared lightbox using DOM index
             item.addEventListener('click', () => {
                 const allItems = Array.from(document.querySelectorAll('.gallery__item:not(.gallery__upload-tile)'));
                 const idx = allItems.indexOf(item);
                 document.dispatchEvent(new CustomEvent('gallery:open', { detail: { index: idx } }));
             });
+
+            bindDeleteButton(item, src);
         });
     }
 
+    // Apply deletions and bind delete buttons to hardcoded images
+    function applyDeletionsAndBindHardcoded() {
+        const deletedImages = JSON.parse(localStorage.getItem('deletedGalleryImages') || '[]');
+        const hardcodedItems = document.querySelectorAll('.gallery__item:not(.gallery__upload-tile)');
+        
+        hardcodedItems.forEach(item => {
+            const img = item.querySelector('img');
+            if (img) {
+                const src = img.getAttribute('src');
+                if (deletedImages.includes(src)) {
+                    item.remove();
+                } else {
+                    if (!item.querySelector('.gallery__delete-btn')) {
+                        bindDeleteButton(item, src);
+                    }
+                }
+            }
+        });
+    }
+
+    applyDeletionsAndBindHardcoded();
     // Load saved images on page load
     loadImagesFromStorage();
 })();

@@ -384,6 +384,7 @@ document.head.appendChild(style);
     // Authorized emails for gallery upload
     const AUTHORIZED_EMAILS = [
         'ieeecrr@gmail.com',
+        '9391904010'
     ]; // You can add more emails here by editing this list
 
     const authModal = document.getElementById('auth-modal');
